@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>手写数字识别</title>
+    <style>
+        body {font-family: Arial, sans-serif;text-align: center;}
+        h1 {margin-top: 50px;}
+        #imageUpload {margin-top: 20px;}
+        #result {margin-top: 20px;font-size: 18px;}
+        .error {color: red;}
+        input, button {cursor: pointer;}
+        div {margin-top: 20px;margin-bottom: 40px;}
+    </style>
+</head>
+<body>
+    <h1>手写数字识别</h1>
+    <div>
+        <input type="file" id="imageUpload" accept="image/*">
+        <button onclick="uploadImage()">开始识别</button>
+    </div>
+    <div id="result"></div>
+    <script>
+    let currentImageElement; // Global variable to store the current image element
+    function displayImage(file) {
+        const reader = new FileReader();
+        reader.onload = function(event) {
+            const imageElement = document.createElement('img');
+            imageElement.src = event.target.result;
+            // 设置图片的宽度
+            imageElement.style.width = '400px';
+            if (currentImageElement) {
+                // 替换当前的图片元素为新的图片元素
+                currentImageElement.parentNode.replaceChild(imageElement, currentImageElement);
+            } else {
+                // 将新的图片元素附加到文档的 body 元素中
+                document.body.appendChild(imageElement);
+            }
+            currentImageElement = imageElement; // 更新当前的图片元素
+        };
+        reader.readAsDataURL(file);
+    }
+    function uploadImage() {
+        const input = document.getElementById('imageUpload');
+        const file = input.files[0];
+        const formData = new FormData();
+        formData.append('image', file);
+        fetch('/recognize', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            const resultElement = document.getElementById('result');
+            resultElement.innerText = `识别结果：${data.result}`;
+            displayImage(file); // Display the uploaded image
+        })
+        .catch(error => {
+            const resultElement = document.getElementById('result');
+            resultElement.innerText = '发生错误，请重试。';
+            resultElement.classList.add('error');
+            console.error('发生错误：', error);
+        });
+    }
+</script>
+</body>
+</html>
